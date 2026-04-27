@@ -3,6 +3,7 @@ module Bench exposing
     , v2_64, v2_65, v2_256, v2_1024, v2_4096
     , v3_64, v3_65, v3_256, v3_1024, v3_4096
     , v4_64, v4_65, v4_256, v4_1024, v4_4096
+    , v5_64, v5_65, v5_256, v5_1024, v5_4096
     )
 
 {-| Benchmark functions for SHA-256.
@@ -50,6 +51,7 @@ import SHA256
 import SHA256.V1
 import SHA256.V3
 import SHA256.V4
+import SHA256.V5
 
 
 makeBytes : Int -> Bytes
@@ -239,3 +241,42 @@ v4_1024 () =
 v4_4096 : () -> Bytes
 v4_4096 () =
     SHA256.V4.hash bytes4096
+
+
+
+-- V5 (V4 + twoRounds factoring)
+
+
+{-| V5 SHA-256 on 64 bytes.
+-}
+v5_64 : () -> Bytes
+v5_64 () =
+    SHA256.V5.hash bytes64
+
+
+{-| V5 SHA-256 on 65 bytes.
+-}
+v5_65 : () -> Bytes
+v5_65 () =
+    SHA256.V5.hash bytes65
+
+
+{-| V5 SHA-256 on 256 bytes.
+-}
+v5_256 : () -> Bytes
+v5_256 () =
+    SHA256.V5.hash bytes256
+
+
+{-| V5 SHA-256 on 1024 bytes.
+-}
+v5_1024 : () -> Bytes
+v5_1024 () =
+    SHA256.V5.hash bytes1024
+
+
+{-| V5 SHA-256 on 4096 bytes.
+-}
+v5_4096 : () -> Bytes
+v5_4096 () =
+    SHA256.V5.hash bytes4096

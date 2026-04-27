@@ -1,4 +1,4 @@
-module SHA512 exposing
+module SHA384 exposing
     ( Digest
     , fromString
     , fromBytes
@@ -7,9 +7,11 @@ module SHA512 exposing
     , toBytes, toByteValues
     )
 
-{-| [SHA-512] is a [cryptographic hash function] that gives 256 bits of security.
+{-| [SHA-384] is a [cryptographic hash function] that gives 192 bits of security.
 
-[SHA-512]: http://www.iwar.org.uk/comsec/resources/cipher/sha256-384-512.pdf
+It is a truncated variant of SHA-512 with different initial hash values.
+
+[SHA-384]: http://www.iwar.org.uk/comsec/resources/cipher/sha256-384-512.pdf
 [cryptographic hash function]: https://en.wikipedia.org/wiki/Cryptographic_hash_function
 
 @docs Digest
@@ -38,40 +40,40 @@ import Internal.Base64
 import Internal.SHA512
 
 
-{-| An abstract sha512 digest.
+{-| An abstract sha384 digest.
 -}
 type Digest
-    = Digest Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int Int
+    = Digest Int Int Int Int Int Int Int Int Int Int Int Int
 
 
 initialState : Internal.SHA512.HashResult
 initialState =
-    { h0h = 0x6A09E667
-    , h0l = 0xF3BCC908
-    , h1h = 0xBB67AE85
-    , h1l = 0x84CAA73B
-    , h2h = 0x3C6EF372
-    , h2l = 0xFE94F82B
-    , h3h = 0xA54FF53A
-    , h3l = 0x5F1D36F1
-    , h4h = 0x510E527F
-    , h4l = 0xADE682D1
-    , h5h = 0x9B05688C
-    , h5l = 0x2B3E6C1F
-    , h6h = 0x1F83D9AB
-    , h6l = 0xFB41BD6B
-    , h7h = 0x5BE0CD19
-    , h7l = 0x137E2179
+    { h0h = 0xCBBB9D5D
+    , h0l = 0xC1059ED8
+    , h1h = 0x629A292A
+    , h1l = 0x367CD507
+    , h2h = 0x9159015A
+    , h2l = 0x3070DD17
+    , h3h = 0x152FECD8
+    , h3l = 0xF70E5939
+    , h4h = 0x67332667
+    , h4l = 0xFFC00B31
+    , h5h = 0x8EB44A87
+    , h5l = 0x68581511
+    , h6h = 0xDB0C2E0D
+    , h6l = 0x64F98FA7
+    , h7h = 0x47B5481D
+    , h7l = 0xBEFA4FA4
     }
 
 
 {-| Create a digest from a `String`.
 
-    import SHA512
+    import SHA384
 
-    SHA512.fromString "hello world"
-        |> SHA512.toHex
-    --> "309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f"
+    SHA384.fromString "hello world"
+        |> SHA384.toHex
+    --> "fdbd8e75a67f29f701a4e040385e2e23986303ea10239211af907fcbb83578b3e417cb71ce646efd0819dd8c088de1bd"
 
 -}
 fromString : String -> Digest
@@ -82,13 +84,13 @@ fromString str =
 {-| Create a digest from [`Bytes`](https://package.elm-lang.org/packages/elm/bytes/latest/).
 
     import Bytes.Encode as Encode exposing (Endianness(..))
-    import SHA512
+    import SHA384
 
     Encode.unsignedInt32 Encode.BE 42
         |> Encode.encode
-        |> SHA512.fromBytes
-        |> SHA512.toHex
-    --> "08cc3f0991969ae44b05e92bcd8f6ece4dd4e9733a9288dcfff47325906c36ecab9a3c63e59411b3df1f6fed6a232c6a20bff3afff91b36689a41037cbe0b6a0"
+        |> SHA384.fromBytes
+        |> SHA384.toHex
+    --> "169c6e0f2a73b8a3f0c6dad952ab62ee64136652d1bfcf5901951186384324070819bba50666c9371265b68b7a57410d"
 
 -}
 fromBytes : Bytes -> Digest
@@ -97,15 +99,15 @@ fromBytes bytes =
         r =
             Internal.SHA512.hash initialState bytes
     in
-    Digest r.h0h r.h0l r.h1h r.h1l r.h2h r.h2l r.h3h r.h3l r.h4h r.h4l r.h5h r.h5l r.h6h r.h6l r.h7h r.h7l
+    Digest r.h0h r.h0l r.h1h r.h1l r.h2h r.h2l r.h3h r.h3l r.h4h r.h4l r.h5h r.h5l
 
 
 {-| Create a digest from a list of byte values (0-255).
 
-    import SHA512
+    import SHA384
 
-    SHA512.fromByteValues [ 72, 105, 33, 32, 240, 159, 152, 132 ]
-        == SHA512.fromString "Hi! \u{1F604}"
+    SHA384.fromByteValues [ 72, 105, 33, 32, 240, 159, 152, 132 ]
+        == SHA384.fromString "Hi! \u{1F604}"
     --> True
 
 -}
@@ -116,15 +118,15 @@ fromByteValues values =
 
 {-| Turn a digest into a hex string.
 
-    import SHA512
+    import SHA384
 
-    SHA512.fromString "And our friends are all aboard"
-        |> SHA512.toHex
-    --> "5af050bf4b4f2fbb2f032f42521e2e46a1aff6dcd02176c31425d8777abbe5c818375de27fd8d83cd848621a85507d1bd19eb35c70152c0f8e77b9ba3104e669"
+    SHA384.fromString "And our friends are all aboard"
+        |> SHA384.toHex
+    --> "8b955c0b596df8b93db7c9a0105098c5be18bd4dbbea4cccf9b4b138c54668d0c9295485dc3b20a1ecd1bf97762f3b47"
 
 -}
 toHex : Digest -> String
-toHex (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l h6h h6l h7h h7l) =
+toHex (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l) =
     wordToHex h0h
         ++ wordToHex h0l
         ++ wordToHex h1h
@@ -137,19 +139,15 @@ toHex (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l h6h h6l h7h h7l) =
         ++ wordToHex h4l
         ++ wordToHex h5h
         ++ wordToHex h5l
-        ++ wordToHex h6h
-        ++ wordToHex h6l
-        ++ wordToHex h7h
-        ++ wordToHex h7l
 
 
 {-| Turn a digest into a base64 encoded string.
 
-    import SHA512
+    import SHA384
 
-    SHA512.fromString "Many more of them live next door"
-        |> SHA512.toBase64
-    --> "cyr6xhwqW4Fk9Gm5R4h/dqFxkPOf/gPHKiI6t00qQFC8QJAP65IlZkS4YhdGxTvL7VPFzlSPAoXtPTxPAmVJrg=="
+    SHA384.fromString "Many more of them live next door"
+        |> SHA384.toBase64
+    --> "pKq5Z/Msjg14oJ2TGHS21h+L9lMWkASENRmCgur5mpwRNoE3dAPWV6kw+aNX1gmB"
 
 -}
 toBase64 : Digest -> String
@@ -157,10 +155,10 @@ toBase64 digest =
     Internal.Base64.encode (toBytes digest)
 
 
-{-| Turn a digest into `Bytes`. The width is 64 bytes or 512 bits.
+{-| Turn a digest into `Bytes`. The width is 48 bytes or 384 bits.
 -}
 toBytes : Digest -> Bytes
-toBytes (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l h6h h6l h7h h7l) =
+toBytes (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l) =
     Encode.encode
         (Encode.sequence
             [ Encode.unsignedInt32 BE h0h
@@ -175,33 +173,27 @@ toBytes (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l h6h h6l h7h h7l)
             , Encode.unsignedInt32 BE h4l
             , Encode.unsignedInt32 BE h5h
             , Encode.unsignedInt32 BE h5l
-            , Encode.unsignedInt32 BE h6h
-            , Encode.unsignedInt32 BE h6l
-            , Encode.unsignedInt32 BE h7h
-            , Encode.unsignedInt32 BE h7l
             ]
         )
 
 
 {-| Turn a digest into a list of byte values (0-255).
 
-    import SHA512
+    import SHA384
 
-    SHA512.fromString "And the band begins to play"
-        |> SHA512.toByteValues
-    --> [ 153, 140, 77, 156, 68, 193, 195, 117
-    --> , 134, 19, 24, 147, 44, 86, 45, 132
-    --> , 106, 110, 43, 98, 221, 233, 100, 27
-    --> , 183, 45, 33, 120, 139, 31, 6, 103
-    --> , 128, 205, 65, 65, 9, 252, 111, 213
-    --> , 5, 60, 65, 56, 181, 170, 166, 85
-    --> , 7, 48, 58, 253, 54, 121, 246, 230
-    --> , 31, 95, 205, 70, 53, 219, 78, 168
+    SHA384.fromString "And the band begins to play"
+        |> SHA384.toByteValues
+    --> [ 216, 234, 215, 67, 129, 199, 177, 6
+    --> , 4, 113, 130, 141, 149, 211, 213, 72
+    --> , 182, 77, 43, 191, 48, 162, 210, 207
+    --> , 88, 239, 69, 109, 211, 248, 187, 238
+    --> , 97, 27, 125, 162, 116, 132, 44, 35
+    --> , 116, 33, 51, 81, 115, 241, 201, 137
     --> ]
 
 -}
 toByteValues : Digest -> List Int
-toByteValues (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l h6h h6l h7h h7l) =
+toByteValues (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l) =
     wordToBytes h0h
         ++ wordToBytes h0l
         ++ wordToBytes h1h
@@ -214,10 +206,6 @@ toByteValues (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l h6h h6l h7h
         ++ wordToBytes h4l
         ++ wordToBytes h5h
         ++ wordToBytes h5l
-        ++ wordToBytes h6h
-        ++ wordToBytes h6l
-        ++ wordToBytes h7h
-        ++ wordToBytes h7l
 
 
 

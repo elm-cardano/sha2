@@ -1,8 +1,6 @@
 module SHA224 exposing
     ( Digest
-    , fromString
-    , fromBytes
-    , fromByteValues
+    , fromString, fromBytes, fromByteValues
     , toHex, toBase64
     , toBytes, toByteValues
     )
@@ -33,10 +31,11 @@ It is a truncated variant of SHA-256 with different initial hash values.
 
 -}
 
-import Bitwise
 import Bytes exposing (Bytes, Endianness(..))
 import Bytes.Encode as Encode
+import Hex
 import Internal.Base64
+import Internal.Helper exposing (wordToBytes)
 import Internal.SHA256
 
 
@@ -119,7 +118,7 @@ fromByteValues values =
 -}
 toHex : Digest -> String
 toHex (Digest h0 h1 h2 h3 h4 h5 h6) =
-    wordToHex h0 ++ wordToHex h1 ++ wordToHex h2 ++ wordToHex h3 ++ wordToHex h4 ++ wordToHex h5 ++ wordToHex h6
+    Hex.fromWord32 h0 ++ Hex.fromWord32 h1 ++ Hex.fromWord32 h2 ++ Hex.fromWord32 h3 ++ Hex.fromWord32 h4 ++ Hex.fromWord32 h5 ++ Hex.fromWord32 h6 ++ ""
 
 
 {-| Turn a digest into a base64 encoded string.
@@ -169,82 +168,3 @@ toBytes (Digest h0 h1 h2 h3 h4 h5 h6) =
 toByteValues : Digest -> List Int
 toByteValues (Digest h0 h1 h2 h3 h4 h5 h6) =
     wordToBytes h0 ++ wordToBytes h1 ++ wordToBytes h2 ++ wordToBytes h3 ++ wordToBytes h4 ++ wordToBytes h5 ++ wordToBytes h6
-
-
-
--- Helpers
-
-
-wordToHex : Int -> String
-wordToHex w =
-    String.fromList
-        [ nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 28 w))
-        , nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 24 w))
-        , nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 20 w))
-        , nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 16 w))
-        , nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 12 w))
-        , nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 8 w))
-        , nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 4 w))
-        , nibbleToChar (Bitwise.and 0x0F w)
-        ]
-
-
-nibbleToChar : Int -> Char
-nibbleToChar n =
-    case n of
-        0 ->
-            '0'
-
-        1 ->
-            '1'
-
-        2 ->
-            '2'
-
-        3 ->
-            '3'
-
-        4 ->
-            '4'
-
-        5 ->
-            '5'
-
-        6 ->
-            '6'
-
-        7 ->
-            '7'
-
-        8 ->
-            '8'
-
-        9 ->
-            '9'
-
-        10 ->
-            'a'
-
-        11 ->
-            'b'
-
-        12 ->
-            'c'
-
-        13 ->
-            'd'
-
-        14 ->
-            'e'
-
-        _ ->
-            'f'
-
-
-wordToBytes : Int -> List Int
-wordToBytes w =
-    [ Bitwise.and 0xFF (Bitwise.shiftRightZfBy 24 w)
-    , Bitwise.and 0xFF (Bitwise.shiftRightZfBy 16 w)
-    , Bitwise.and 0xFF (Bitwise.shiftRightZfBy 8 w)
-    , Bitwise.and 0xFF w
-    ]

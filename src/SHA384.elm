@@ -1,8 +1,6 @@
 module SHA384 exposing
     ( Digest
-    , fromString
-    , fromBytes
-    , fromByteValues
+    , fromString, fromBytes, fromByteValues
     , toHex, toBase64
     , toBytes, toByteValues
     )
@@ -33,10 +31,11 @@ It is a truncated variant of SHA-512 with different initial hash values.
 
 -}
 
-import Bitwise
 import Bytes exposing (Bytes, Endianness(..))
 import Bytes.Encode as Encode
+import Hex
 import Internal.Base64
+import Internal.Helper exposing (wordToBytes)
 import Internal.SHA512
 
 
@@ -127,18 +126,19 @@ fromByteValues values =
 -}
 toHex : Digest -> String
 toHex (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l) =
-    wordToHex h0h
-        ++ wordToHex h0l
-        ++ wordToHex h1h
-        ++ wordToHex h1l
-        ++ wordToHex h2h
-        ++ wordToHex h2l
-        ++ wordToHex h3h
-        ++ wordToHex h3l
-        ++ wordToHex h4h
-        ++ wordToHex h4l
-        ++ wordToHex h5h
-        ++ wordToHex h5l
+    Hex.fromWord32 h0h
+        ++ Hex.fromWord32 h0l
+        ++ Hex.fromWord32 h1h
+        ++ Hex.fromWord32 h1l
+        ++ Hex.fromWord32 h2h
+        ++ Hex.fromWord32 h2l
+        ++ Hex.fromWord32 h3h
+        ++ Hex.fromWord32 h3l
+        ++ Hex.fromWord32 h4h
+        ++ Hex.fromWord32 h4l
+        ++ Hex.fromWord32 h5h
+        ++ Hex.fromWord32 h5l
+        ++ ""
 
 
 {-| Turn a digest into a base64 encoded string.
@@ -206,82 +206,3 @@ toByteValues (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l) =
         ++ wordToBytes h4l
         ++ wordToBytes h5h
         ++ wordToBytes h5l
-
-
-
--- Helpers
-
-
-wordToHex : Int -> String
-wordToHex w =
-    String.fromList
-        [ nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 28 w))
-        , nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 24 w))
-        , nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 20 w))
-        , nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 16 w))
-        , nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 12 w))
-        , nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 8 w))
-        , nibbleToChar (Bitwise.and 0x0F (Bitwise.shiftRightZfBy 4 w))
-        , nibbleToChar (Bitwise.and 0x0F w)
-        ]
-
-
-nibbleToChar : Int -> Char
-nibbleToChar n =
-    case n of
-        0 ->
-            '0'
-
-        1 ->
-            '1'
-
-        2 ->
-            '2'
-
-        3 ->
-            '3'
-
-        4 ->
-            '4'
-
-        5 ->
-            '5'
-
-        6 ->
-            '6'
-
-        7 ->
-            '7'
-
-        8 ->
-            '8'
-
-        9 ->
-            '9'
-
-        10 ->
-            'a'
-
-        11 ->
-            'b'
-
-        12 ->
-            'c'
-
-        13 ->
-            'd'
-
-        14 ->
-            'e'
-
-        _ ->
-            'f'
-
-
-wordToBytes : Int -> List Int
-wordToBytes w =
-    [ Bitwise.and 0xFF (Bitwise.shiftRightZfBy 24 w)
-    , Bitwise.and 0xFF (Bitwise.shiftRightZfBy 16 w)
-    , Bitwise.and 0xFF (Bitwise.shiftRightZfBy 8 w)
-    , Bitwise.and 0xFF w
-    ]

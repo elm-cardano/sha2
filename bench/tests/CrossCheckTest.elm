@@ -8,6 +8,7 @@ import Expect
 import SHA256
 import SHA256.V1
 import SHA256.V3
+import SHA256.V4
 import Test exposing (..)
 
 
@@ -20,6 +21,10 @@ spec =
             )
         , describe "V1 vs V3"
             (List.map (crossCheck "V3" SHA256.V3.hash)
+                sizes
+            )
+        , describe "V1 vs V4"
+            (List.map (crossCheck "V4" SHA256.V4.hash)
                 sizes
             )
         ]

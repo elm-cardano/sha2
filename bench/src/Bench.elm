@@ -2,6 +2,7 @@ module Bench exposing
     ( v1_64, v1_65, v1_256, v1_1024, v1_4096
     , v2_64, v2_65, v2_256, v2_1024, v2_4096
     , v3_64, v3_65, v3_256, v3_1024, v3_4096
+    , v4_64, v4_65, v4_256, v4_1024, v4_4096
     )
 
 {-| Benchmark functions for SHA-256.
@@ -32,9 +33,14 @@ elm-bench -f Bench.v1_4096 -f Bench.v2_4096 -f Bench.v3_4096 "()"
 @docs v2_64, v2_65, v2_256, v2_1024, v2_4096
 
 
-## V3 (V2 + inlined ch)
+## V3 (V2 + inlined ch/maj)
 
 @docs v3_64, v3_65, v3_256, v3_1024, v3_4096
+
+
+## V4 (V3 + removed unsigned)
+
+@docs v4_64, v4_65, v4_256, v4_1024, v4_4096
 
 -}
 
@@ -43,6 +49,7 @@ import Bytes.Encode as Encode
 import SHA256
 import SHA256.V1
 import SHA256.V3
+import SHA256.V4
 
 
 makeBytes : Int -> Bytes
@@ -193,3 +200,42 @@ v3_1024 () =
 v3_4096 : () -> Bytes
 v3_4096 () =
     SHA256.V3.hash bytes4096
+
+
+
+-- V4 (V3 + removed unsigned)
+
+
+{-| V4 SHA-256 on 64 bytes.
+-}
+v4_64 : () -> Bytes
+v4_64 () =
+    SHA256.V4.hash bytes64
+
+
+{-| V4 SHA-256 on 65 bytes.
+-}
+v4_65 : () -> Bytes
+v4_65 () =
+    SHA256.V4.hash bytes65
+
+
+{-| V4 SHA-256 on 256 bytes.
+-}
+v4_256 : () -> Bytes
+v4_256 () =
+    SHA256.V4.hash bytes256
+
+
+{-| V4 SHA-256 on 1024 bytes.
+-}
+v4_1024 : () -> Bytes
+v4_1024 () =
+    SHA256.V4.hash bytes1024
+
+
+{-| V4 SHA-256 on 4096 bytes.
+-}
+v4_4096 : () -> Bytes
+v4_4096 () =
+    SHA256.V4.hash bytes4096

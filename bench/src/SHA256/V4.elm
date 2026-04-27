@@ -142,18 +142,16 @@ blockStep state =
             halfBlockDecoder
 
 
-{-| Decode 8 big-endian u32 words. Uses map5 with nested pairs to stay within
-Elm's F2..F9 fast-call path (callback is F5, record constructor is F8).
+{-| Decode 8 big-endian u32 words. Inner map5 decodes 5 words and returns an F3
+closure; outer map4 feeds the remaining 3 words via A3 fast-path. No tuples.
 -}
 halfBlockDecoder : Decoder HalfBlock
 halfBlockDecoder =
-    Decode.map5
-        (\a b ( c, d ) ( e, f ) ( g, h ) -> HalfBlock a b c d e f g h)
+    Decode.map4 (\partial f g h -> partial f g h)
+        (Decode.map5 (\a b c d e -> \f g h -> HalfBlock a b c d e f g h) u32 u32 u32 u32 u32)
         u32
         u32
-        (Decode.map2 Tuple.pair u32 u32)
-        (Decode.map2 Tuple.pair u32 u32)
-        (Decode.map2 Tuple.pair u32 u32)
+        u32
 
 
 u32 : Decoder Int

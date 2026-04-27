@@ -1,22 +1,24 @@
 module Bench exposing
     ( v1_64, v1_65, v1_256, v1_1024, v1_4096
     , v2_64, v2_65, v2_256, v2_1024, v2_4096
+    , v3_64, v3_65, v3_256, v3_1024, v3_4096
     )
 
 {-| Benchmark functions for SHA-256.
 
 V1 is the original folkertdev/elm-sha2 implementation.
 V2 is the new elm-cardano/sha2 optimized implementation.
+V3 is V2 with ch inlined as raw bitwise operations.
 
 Each function takes `()` and computes SHA-256 on a pre-built input of the given size.
 Useful with elm-bench:
 
 ```sh
-elm-bench -f Bench.v1_64 -f Bench.v2_64 "()"
-elm-bench -f Bench.v1_65 -f Bench.v2_65 "()"
-elm-bench -f Bench.v1_256 -f Bench.v2_256 "()"
-elm-bench -f Bench.v1_1024 -f Bench.v2_1024 "()"
-elm-bench -f Bench.v1_4096 -f Bench.v2_4096 "()"
+elm-bench -f Bench.v1_64 -f Bench.v2_64 -f Bench.v3_64 "()"
+elm-bench -f Bench.v1_65 -f Bench.v2_65 -f Bench.v3_65 "()"
+elm-bench -f Bench.v1_256 -f Bench.v2_256 -f Bench.v3_256 "()"
+elm-bench -f Bench.v1_1024 -f Bench.v2_1024 -f Bench.v3_1024 "()"
+elm-bench -f Bench.v1_4096 -f Bench.v2_4096 -f Bench.v3_4096 "()"
 ```
 
 
@@ -29,12 +31,18 @@ elm-bench -f Bench.v1_4096 -f Bench.v2_4096 "()"
 
 @docs v2_64, v2_65, v2_256, v2_1024, v2_4096
 
+
+## V3 (V2 + inlined ch)
+
+@docs v3_64, v3_65, v3_256, v3_1024, v3_4096
+
 -}
 
 import Bytes exposing (Bytes)
 import Bytes.Encode as Encode
 import SHA256
 import SHA256.V1
+import SHA256.V3
 
 
 makeBytes : Int -> Bytes
@@ -146,3 +154,42 @@ v2_1024 () =
 v2_4096 : () -> Bytes
 v2_4096 () =
     SHA256.fromBytes bytes4096 |> SHA256.toBytes
+
+
+
+-- V3 (V2 + inlined ch)
+
+
+{-| V3 SHA-256 on 64 bytes.
+-}
+v3_64 : () -> Bytes
+v3_64 () =
+    SHA256.V3.hash bytes64
+
+
+{-| V3 SHA-256 on 65 bytes.
+-}
+v3_65 : () -> Bytes
+v3_65 () =
+    SHA256.V3.hash bytes65
+
+
+{-| V3 SHA-256 on 256 bytes.
+-}
+v3_256 : () -> Bytes
+v3_256 () =
+    SHA256.V3.hash bytes256
+
+
+{-| V3 SHA-256 on 1024 bytes.
+-}
+v3_1024 : () -> Bytes
+v3_1024 () =
+    SHA256.V3.hash bytes1024
+
+
+{-| V3 SHA-256 on 4096 bytes.
+-}
+v3_4096 : () -> Bytes
+v3_4096 () =
+    SHA256.V3.hash bytes4096

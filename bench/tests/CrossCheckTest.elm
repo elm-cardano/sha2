@@ -7,35 +7,32 @@ import Bytes.Encode as Encode
 import Expect
 import SHA256
 import SHA256.V1
+import SHA256.V3
 import Test exposing (..)
 
 
 spec : Test
 spec =
-    describe "V1 vs V2 cross-check"
-        [ describe "various input sizes"
-            (List.map crossCheck
-                [ 0
-                , 1
-                , 3
-                , 55
-                , 56
-                , 64
-                , 65
-                , 100
-                , 128
-                , 256
-                , 512
-                , 1024
-                , 4096
-                ]
+    describe "V1 vs V2 vs V3 cross-check"
+        [ describe "V1 vs V2"
+            (List.map (crossCheck "V2" (\input -> SHA256.fromBytes input |> SHA256.toBytes))
+                sizes
+            )
+        , describe "V1 vs V3"
+            (List.map (crossCheck "V3" SHA256.V3.hash)
+                sizes
             )
         ]
 
 
-crossCheck : Int -> Test
-crossCheck n =
-    test (String.fromInt n ++ " bytes") <|
+sizes : List Int
+sizes =
+    [ 0, 1, 3, 55, 56, 64, 65, 100, 128, 256, 512, 1024, 4096 ]
+
+
+crossCheck : String -> (Bytes -> Bytes) -> Int -> Test
+crossCheck label hashFn n =
+    test (label ++ " " ++ String.fromInt n ++ " bytes") <|
         \_ ->
             let
                 input =
@@ -44,10 +41,10 @@ crossCheck n =
                 v1 =
                     SHA256.V1.hash input
 
-                v2 =
-                    SHA256.fromBytes input |> SHA256.toBytes
+                result =
+                    hashFn input
             in
-            bytesToHex v2
+            bytesToHex result
                 |> Expect.equal (bytesToHex v1)
 
 

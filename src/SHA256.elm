@@ -1294,7 +1294,7 @@ ssig1 x =
 
 ch : Int -> Int -> Int -> Int
 ch x y z =
-    Bitwise.xor (Bitwise.and x y) (Bitwise.and (Bitwise.complement x) z)
+    Bitwise.xor z (Bitwise.and x (Bitwise.xor y z))
 
 
 maj : Int -> Int -> Int -> Int

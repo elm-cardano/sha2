@@ -12,6 +12,7 @@ import SHA256.V4
 import SHA256.V5
 import SHA512
 import SHA512.V1
+import SHA512.V3
 import Test exposing (..)
 
 
@@ -36,6 +37,10 @@ spec =
             )
         , describe "SHA-512 V1 vs optimized"
             (List.map (crossCheck512 "opt" (\input -> SHA512.fromBytes input |> SHA512.toBytes))
+                sizes
+            )
+        , describe "SHA-512 V1 vs V3"
+            (List.map (crossCheck512 "V3" SHA512.V3.hash)
                 sizes
             )
         ]

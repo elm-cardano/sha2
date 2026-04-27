@@ -3,7 +3,10 @@ module Bench exposing
     , v2_64, v2_65, v2_256, v2_1024, v2_4096
     , v3_64, v3_65, v3_256, v3_1024, v3_4096
     , v4_64, v4_65, v4_256, v4_1024, v4_4096
-    , sha512_1024, sha512_128, sha512_256, sha512_4096, sha512v1_1024, sha512v1_128, sha512v1_256, sha512v1_4096, v5_1024, v5_256, v5_4096, v5_64, v5_65
+    , v5_64, v5_65, v5_256, v5_1024, v5_4096
+    , sha512v1_128, sha512v1_256, sha512v1_1024, sha512v1_4096
+    , sha512_128, sha512_256, sha512_1024, sha512_4096
+    , sha512v3_128, sha512v3_256, sha512v3_1024, sha512v3_4096
     )
 
 {-| Benchmark functions for SHA-256.
@@ -43,6 +46,26 @@ elm-bench -f Bench.v1_4096 -f Bench.v2_4096 -f Bench.v3_4096 "()"
 
 @docs v4_64, v4_65, v4_256, v4_1024, v4_4096
 
+
+## V5 (V4 + twoRounds factoring)
+
+@docs v5_64, v5_65, v5_256, v5_1024, v5_4096
+
+
+## SHA-512 V1 (folkertdev/elm-sha2 baseline)
+
+@docs sha512v1_128, sha512v1_256, sha512v1_1024, sha512v1_4096
+
+
+## SHA-512 optimized (elm-cardano/sha2)
+
+@docs sha512_128, sha512_256, sha512_1024, sha512_4096
+
+
+## SHA-512 V3 (experimental)
+
+@docs sha512v3_128, sha512v3_256, sha512v3_1024, sha512v3_4096
+
 -}
 
 import Bytes exposing (Bytes)
@@ -54,6 +77,7 @@ import SHA256.V4
 import SHA256.V5
 import SHA512
 import SHA512.V1
+import SHA512.V3
 
 
 makeBytes : Int -> Bytes
@@ -351,3 +375,35 @@ sha512_1024 () =
 sha512_4096 : () -> Bytes
 sha512_4096 () =
     SHA512.fromBytes bytes4096 |> SHA512.toBytes
+
+
+
+-- SHA-512 V3 (experimental)
+
+
+{-| SHA-512 V3 on 128 bytes.
+-}
+sha512v3_128 : () -> Bytes
+sha512v3_128 () =
+    SHA512.V3.hash bytes128
+
+
+{-| SHA-512 V3 on 256 bytes.
+-}
+sha512v3_256 : () -> Bytes
+sha512v3_256 () =
+    SHA512.V3.hash bytes256
+
+
+{-| SHA-512 V3 on 1024 bytes.
+-}
+sha512v3_1024 : () -> Bytes
+sha512v3_1024 () =
+    SHA512.V3.hash bytes1024
+
+
+{-| SHA-512 V3 on 4096 bytes.
+-}
+sha512v3_4096 : () -> Bytes
+sha512v3_4096 () =
+    SHA512.V3.hash bytes4096

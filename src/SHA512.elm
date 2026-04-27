@@ -222,6 +222,10 @@ u32 =
     Decode.unsignedInt32 BE
 
 
+type alias W64 =
+    { hi : Int, lo : Int }
+
+
 type alias RoundState =
     { aHi : Int
     , aLo : Int
@@ -242,11 +246,11 @@ type alias RoundState =
     }
 
 
-{-| Execute two SHA-512 compression rounds. F9 function (within Elm's fast-call path).
-Takes two (k\_hi, k\_lo, w\_hi, w\_lo) quads and the current 8-word working state.
+{-| Execute two SHA-512 compression rounds. F7 function (within Elm's fast-call path).
+Takes two (k\_hi, k\_lo) pairs, two W64 message words, and the current 8-word working state.
 -}
-twoRounds : Int -> Int -> Int -> Int -> Int -> Int -> Int -> Int -> RoundState -> RoundState
-twoRounds k0h k0l w0h w0l k1h k1l w1h w1l s =
+twoRounds : Int -> Int -> W64 -> Int -> Int -> W64 -> RoundState -> RoundState
+twoRounds k0h k0l w0 k1h k1l w1 s =
     let
         -- Round A: t1 = h + bsig1(e) + ch(e,f,g) + k0 + w0
         bs1h =
@@ -262,13 +266,13 @@ twoRounds k0h k0l w0h w0l k1h k1l w1h w1l s =
             Bitwise.xor s.gLo (Bitwise.and s.eLo (Bitwise.xor s.fLo s.gLo))
 
         t1als =
-            unsigned s.hLo + unsigned bs1l + unsigned chl + unsigned k0l + unsigned w0l
+            unsigned s.hLo + unsigned bs1l + unsigned chl + unsigned k0l + unsigned w0.lo
 
         t1al =
             unsigned t1als
 
         t1ah =
-            s.hHi + bs1h + chh + k0h + w0h + t1als // 4294967296 |> unsigned
+            s.hHi + bs1h + chh + k0h + w0.hi + t1als // 4294967296 |> unsigned
 
         -- Round A: t2 = bsig0(a) + maj(a,b,c)
         bs0h =
@@ -326,13 +330,13 @@ twoRounds k0h k0l w0h w0l k1h k1l w1h w1l s =
             Bitwise.xor s.fLo (Bitwise.and e1l (Bitwise.xor s.eLo s.fLo))
 
         t1bls =
-            unsigned s.gLo + unsigned bs1l2 + unsigned chl2 + unsigned k1l + unsigned w1l
+            unsigned s.gLo + unsigned bs1l2 + unsigned chl2 + unsigned k1l + unsigned w1.lo
 
         t1bl =
             unsigned t1bls
 
         t1bh =
-            s.gHi + bs1h2 + chh2 + k1h + w1h + t1bls // 4294967296 |> unsigned
+            s.gHi + bs1h2 + chh2 + k1h + w1.hi + t1bls // 4294967296 |> unsigned
 
         bs0h2 =
             bsig0Hi a1h a1l
@@ -377,21 +381,15 @@ twoRounds k0h k0l w0h w0l k1h k1l w1h w1l s =
 
 
 {-| Compute one message schedule word: ssig1(a) + b + ssig0(c) + d (all 64-bit).
-F8 function within Elm's fast-call path.
+F4 function within Elm's fast-call path.
 -}
-scheduleWord : Int -> Int -> Int -> Int -> Int -> Int -> Int -> Int -> { hi : Int, lo : Int }
-scheduleWord a2h a2l b7h b7l c15h c15l d16h d16l =
+scheduleWord : W64 -> W64 -> W64 -> W64 -> W64
+scheduleWord a b c d =
     let
-        s1l =
-            ssig1Lo a2h a2l
-
-        s0l =
-            ssig0Lo c15h c15l
-
         loSum =
-            unsigned s1l + unsigned b7l + unsigned s0l + unsigned d16l
+            unsigned (ssig1Lo a.hi a.lo) + unsigned b.lo + unsigned (ssig0Lo c.hi c.lo) + unsigned d.lo
     in
-    { hi = ssig1Hi a2h a2l + b7h + ssig0Hi c15h c15l + d16h + loSum // 4294967296 |> unsigned
+    { hi = ssig1Hi a.hi a.lo + b.hi + ssig0Hi c.hi c.lo + d.hi + loSum // 4294967296 |> unsigned
     , lo = unsigned loSum
     }
 
@@ -402,295 +400,247 @@ scheduleWord a2h a2l b7h b7l c15h c15l d16h d16l =
 compress : BlockState -> QuarterBlock -> QuarterBlock -> QuarterBlock -> QuarterBlock -> { h0h : Int, h0l : Int, h1h : Int, h1l : Int, h2h : Int, h2l : Int, h3h : Int, h3l : Int, h4h : Int, h4l : Int, h5h : Int, h5l : Int, h6h : Int, h6l : Int, h7h : Int, h7l : Int }
 compress state q1 q2 q3 q4 =
     let
-        -- Extract 16 64-bit message words (each as hi/lo pair)
-        w0h =
-            q1.w0h
+        -- Extract 16 64-bit message words as W64 records
+        w0 =
+            { hi = q1.w0h, lo = q1.w0l }
 
-        w0l =
-            q1.w0l
+        w1 =
+            { hi = q1.w1h, lo = q1.w1l }
 
-        w1h =
-            q1.w1h
+        w2 =
+            { hi = q1.w2h, lo = q1.w2l }
 
-        w1l =
-            q1.w1l
+        w3 =
+            { hi = q1.w3h, lo = q1.w3l }
 
-        w2h =
-            q1.w2h
+        w4 =
+            { hi = q2.w0h, lo = q2.w0l }
 
-        w2l =
-            q1.w2l
+        w5 =
+            { hi = q2.w1h, lo = q2.w1l }
 
-        w3h =
-            q1.w3h
+        w6 =
+            { hi = q2.w2h, lo = q2.w2l }
 
-        w3l =
-            q1.w3l
+        w7 =
+            { hi = q2.w3h, lo = q2.w3l }
 
-        w4h =
-            q2.w0h
+        w8 =
+            { hi = q3.w0h, lo = q3.w0l }
 
-        w4l =
-            q2.w0l
+        w9 =
+            { hi = q3.w1h, lo = q3.w1l }
 
-        w5h =
-            q2.w1h
+        w10 =
+            { hi = q3.w2h, lo = q3.w2l }
 
-        w5l =
-            q2.w1l
+        w11 =
+            { hi = q3.w3h, lo = q3.w3l }
 
-        w6h =
-            q2.w2h
+        w12 =
+            { hi = q4.w0h, lo = q4.w0l }
 
-        w6l =
-            q2.w2l
+        w13 =
+            { hi = q4.w1h, lo = q4.w1l }
 
-        w7h =
-            q2.w3h
+        w14 =
+            { hi = q4.w2h, lo = q4.w2l }
 
-        w7l =
-            q2.w3l
-
-        w8h =
-            q3.w0h
-
-        w8l =
-            q3.w0l
-
-        w9h =
-            q3.w1h
-
-        w9l =
-            q3.w1l
-
-        w10h =
-            q3.w2h
-
-        w10l =
-            q3.w2l
-
-        w11h =
-            q3.w3h
-
-        w11l =
-            q3.w3l
-
-        w12h =
-            q4.w0h
-
-        w12l =
-            q4.w0l
-
-        w13h =
-            q4.w1h
-
-        w13l =
-            q4.w1l
-
-        w14h =
-            q4.w2h
-
-        w14l =
-            q4.w2l
-
-        w15h =
-            q4.w3h
-
-        w15l =
-            q4.w3l
+        w15 =
+            { hi = q4.w3h, lo = q4.w3l }
 
         -- Message schedule expansion w16..w79
         sw16 =
-            scheduleWord w14h w14l w9h w9l w1h w1l w0h w0l
+            scheduleWord w14 w9 w1 w0
 
         sw17 =
-            scheduleWord w15h w15l w10h w10l w2h w2l w1h w1l
+            scheduleWord w15 w10 w2 w1
 
         sw18 =
-            scheduleWord sw16.hi sw16.lo w11h w11l w3h w3l w2h w2l
+            scheduleWord sw16 w11 w3 w2
 
         sw19 =
-            scheduleWord sw17.hi sw17.lo w12h w12l w4h w4l w3h w3l
+            scheduleWord sw17 w12 w4 w3
 
         sw20 =
-            scheduleWord sw18.hi sw18.lo w13h w13l w5h w5l w4h w4l
+            scheduleWord sw18 w13 w5 w4
 
         sw21 =
-            scheduleWord sw19.hi sw19.lo w14h w14l w6h w6l w5h w5l
+            scheduleWord sw19 w14 w6 w5
 
         sw22 =
-            scheduleWord sw20.hi sw20.lo w15h w15l w7h w7l w6h w6l
+            scheduleWord sw20 w15 w7 w6
 
         sw23 =
-            scheduleWord sw21.hi sw21.lo sw16.hi sw16.lo w8h w8l w7h w7l
+            scheduleWord sw21 sw16 w8 w7
 
         sw24 =
-            scheduleWord sw22.hi sw22.lo sw17.hi sw17.lo w9h w9l w8h w8l
+            scheduleWord sw22 sw17 w9 w8
 
         sw25 =
-            scheduleWord sw23.hi sw23.lo sw18.hi sw18.lo w10h w10l w9h w9l
+            scheduleWord sw23 sw18 w10 w9
 
         sw26 =
-            scheduleWord sw24.hi sw24.lo sw19.hi sw19.lo w11h w11l w10h w10l
+            scheduleWord sw24 sw19 w11 w10
 
         sw27 =
-            scheduleWord sw25.hi sw25.lo sw20.hi sw20.lo w12h w12l w11h w11l
+            scheduleWord sw25 sw20 w12 w11
 
         sw28 =
-            scheduleWord sw26.hi sw26.lo sw21.hi sw21.lo w13h w13l w12h w12l
+            scheduleWord sw26 sw21 w13 w12
 
         sw29 =
-            scheduleWord sw27.hi sw27.lo sw22.hi sw22.lo w14h w14l w13h w13l
+            scheduleWord sw27 sw22 w14 w13
 
         sw30 =
-            scheduleWord sw28.hi sw28.lo sw23.hi sw23.lo w15h w15l w14h w14l
+            scheduleWord sw28 sw23 w15 w14
 
         sw31 =
-            scheduleWord sw29.hi sw29.lo sw24.hi sw24.lo sw16.hi sw16.lo w15h w15l
+            scheduleWord sw29 sw24 sw16 w15
 
         sw32 =
-            scheduleWord sw30.hi sw30.lo sw25.hi sw25.lo sw17.hi sw17.lo sw16.hi sw16.lo
+            scheduleWord sw30 sw25 sw17 sw16
 
         sw33 =
-            scheduleWord sw31.hi sw31.lo sw26.hi sw26.lo sw18.hi sw18.lo sw17.hi sw17.lo
+            scheduleWord sw31 sw26 sw18 sw17
 
         sw34 =
-            scheduleWord sw32.hi sw32.lo sw27.hi sw27.lo sw19.hi sw19.lo sw18.hi sw18.lo
+            scheduleWord sw32 sw27 sw19 sw18
 
         sw35 =
-            scheduleWord sw33.hi sw33.lo sw28.hi sw28.lo sw20.hi sw20.lo sw19.hi sw19.lo
+            scheduleWord sw33 sw28 sw20 sw19
 
         sw36 =
-            scheduleWord sw34.hi sw34.lo sw29.hi sw29.lo sw21.hi sw21.lo sw20.hi sw20.lo
+            scheduleWord sw34 sw29 sw21 sw20
 
         sw37 =
-            scheduleWord sw35.hi sw35.lo sw30.hi sw30.lo sw22.hi sw22.lo sw21.hi sw21.lo
+            scheduleWord sw35 sw30 sw22 sw21
 
         sw38 =
-            scheduleWord sw36.hi sw36.lo sw31.hi sw31.lo sw23.hi sw23.lo sw22.hi sw22.lo
+            scheduleWord sw36 sw31 sw23 sw22
 
         sw39 =
-            scheduleWord sw37.hi sw37.lo sw32.hi sw32.lo sw24.hi sw24.lo sw23.hi sw23.lo
+            scheduleWord sw37 sw32 sw24 sw23
 
         sw40 =
-            scheduleWord sw38.hi sw38.lo sw33.hi sw33.lo sw25.hi sw25.lo sw24.hi sw24.lo
+            scheduleWord sw38 sw33 sw25 sw24
 
         sw41 =
-            scheduleWord sw39.hi sw39.lo sw34.hi sw34.lo sw26.hi sw26.lo sw25.hi sw25.lo
+            scheduleWord sw39 sw34 sw26 sw25
 
         sw42 =
-            scheduleWord sw40.hi sw40.lo sw35.hi sw35.lo sw27.hi sw27.lo sw26.hi sw26.lo
+            scheduleWord sw40 sw35 sw27 sw26
 
         sw43 =
-            scheduleWord sw41.hi sw41.lo sw36.hi sw36.lo sw28.hi sw28.lo sw27.hi sw27.lo
+            scheduleWord sw41 sw36 sw28 sw27
 
         sw44 =
-            scheduleWord sw42.hi sw42.lo sw37.hi sw37.lo sw29.hi sw29.lo sw28.hi sw28.lo
+            scheduleWord sw42 sw37 sw29 sw28
 
         sw45 =
-            scheduleWord sw43.hi sw43.lo sw38.hi sw38.lo sw30.hi sw30.lo sw29.hi sw29.lo
+            scheduleWord sw43 sw38 sw30 sw29
 
         sw46 =
-            scheduleWord sw44.hi sw44.lo sw39.hi sw39.lo sw31.hi sw31.lo sw30.hi sw30.lo
+            scheduleWord sw44 sw39 sw31 sw30
 
         sw47 =
-            scheduleWord sw45.hi sw45.lo sw40.hi sw40.lo sw32.hi sw32.lo sw31.hi sw31.lo
+            scheduleWord sw45 sw40 sw32 sw31
 
         sw48 =
-            scheduleWord sw46.hi sw46.lo sw41.hi sw41.lo sw33.hi sw33.lo sw32.hi sw32.lo
+            scheduleWord sw46 sw41 sw33 sw32
 
         sw49 =
-            scheduleWord sw47.hi sw47.lo sw42.hi sw42.lo sw34.hi sw34.lo sw33.hi sw33.lo
+            scheduleWord sw47 sw42 sw34 sw33
 
         sw50 =
-            scheduleWord sw48.hi sw48.lo sw43.hi sw43.lo sw35.hi sw35.lo sw34.hi sw34.lo
+            scheduleWord sw48 sw43 sw35 sw34
 
         sw51 =
-            scheduleWord sw49.hi sw49.lo sw44.hi sw44.lo sw36.hi sw36.lo sw35.hi sw35.lo
+            scheduleWord sw49 sw44 sw36 sw35
 
         sw52 =
-            scheduleWord sw50.hi sw50.lo sw45.hi sw45.lo sw37.hi sw37.lo sw36.hi sw36.lo
+            scheduleWord sw50 sw45 sw37 sw36
 
         sw53 =
-            scheduleWord sw51.hi sw51.lo sw46.hi sw46.lo sw38.hi sw38.lo sw37.hi sw37.lo
+            scheduleWord sw51 sw46 sw38 sw37
 
         sw54 =
-            scheduleWord sw52.hi sw52.lo sw47.hi sw47.lo sw39.hi sw39.lo sw38.hi sw38.lo
+            scheduleWord sw52 sw47 sw39 sw38
 
         sw55 =
-            scheduleWord sw53.hi sw53.lo sw48.hi sw48.lo sw40.hi sw40.lo sw39.hi sw39.lo
+            scheduleWord sw53 sw48 sw40 sw39
 
         sw56 =
-            scheduleWord sw54.hi sw54.lo sw49.hi sw49.lo sw41.hi sw41.lo sw40.hi sw40.lo
+            scheduleWord sw54 sw49 sw41 sw40
 
         sw57 =
-            scheduleWord sw55.hi sw55.lo sw50.hi sw50.lo sw42.hi sw42.lo sw41.hi sw41.lo
+            scheduleWord sw55 sw50 sw42 sw41
 
         sw58 =
-            scheduleWord sw56.hi sw56.lo sw51.hi sw51.lo sw43.hi sw43.lo sw42.hi sw42.lo
+            scheduleWord sw56 sw51 sw43 sw42
 
         sw59 =
-            scheduleWord sw57.hi sw57.lo sw52.hi sw52.lo sw44.hi sw44.lo sw43.hi sw43.lo
+            scheduleWord sw57 sw52 sw44 sw43
 
         sw60 =
-            scheduleWord sw58.hi sw58.lo sw53.hi sw53.lo sw45.hi sw45.lo sw44.hi sw44.lo
+            scheduleWord sw58 sw53 sw45 sw44
 
         sw61 =
-            scheduleWord sw59.hi sw59.lo sw54.hi sw54.lo sw46.hi sw46.lo sw45.hi sw45.lo
+            scheduleWord sw59 sw54 sw46 sw45
 
         sw62 =
-            scheduleWord sw60.hi sw60.lo sw55.hi sw55.lo sw47.hi sw47.lo sw46.hi sw46.lo
+            scheduleWord sw60 sw55 sw47 sw46
 
         sw63 =
-            scheduleWord sw61.hi sw61.lo sw56.hi sw56.lo sw48.hi sw48.lo sw47.hi sw47.lo
+            scheduleWord sw61 sw56 sw48 sw47
 
         sw64 =
-            scheduleWord sw62.hi sw62.lo sw57.hi sw57.lo sw49.hi sw49.lo sw48.hi sw48.lo
+            scheduleWord sw62 sw57 sw49 sw48
 
         sw65 =
-            scheduleWord sw63.hi sw63.lo sw58.hi sw58.lo sw50.hi sw50.lo sw49.hi sw49.lo
+            scheduleWord sw63 sw58 sw50 sw49
 
         sw66 =
-            scheduleWord sw64.hi sw64.lo sw59.hi sw59.lo sw51.hi sw51.lo sw50.hi sw50.lo
+            scheduleWord sw64 sw59 sw51 sw50
 
         sw67 =
-            scheduleWord sw65.hi sw65.lo sw60.hi sw60.lo sw52.hi sw52.lo sw51.hi sw51.lo
+            scheduleWord sw65 sw60 sw52 sw51
 
         sw68 =
-            scheduleWord sw66.hi sw66.lo sw61.hi sw61.lo sw53.hi sw53.lo sw52.hi sw52.lo
+            scheduleWord sw66 sw61 sw53 sw52
 
         sw69 =
-            scheduleWord sw67.hi sw67.lo sw62.hi sw62.lo sw54.hi sw54.lo sw53.hi sw53.lo
+            scheduleWord sw67 sw62 sw54 sw53
 
         sw70 =
-            scheduleWord sw68.hi sw68.lo sw63.hi sw63.lo sw55.hi sw55.lo sw54.hi sw54.lo
+            scheduleWord sw68 sw63 sw55 sw54
 
         sw71 =
-            scheduleWord sw69.hi sw69.lo sw64.hi sw64.lo sw56.hi sw56.lo sw55.hi sw55.lo
+            scheduleWord sw69 sw64 sw56 sw55
 
         sw72 =
-            scheduleWord sw70.hi sw70.lo sw65.hi sw65.lo sw57.hi sw57.lo sw56.hi sw56.lo
+            scheduleWord sw70 sw65 sw57 sw56
 
         sw73 =
-            scheduleWord sw71.hi sw71.lo sw66.hi sw66.lo sw58.hi sw58.lo sw57.hi sw57.lo
+            scheduleWord sw71 sw66 sw58 sw57
 
         sw74 =
-            scheduleWord sw72.hi sw72.lo sw67.hi sw67.lo sw59.hi sw59.lo sw58.hi sw58.lo
+            scheduleWord sw72 sw67 sw59 sw58
 
         sw75 =
-            scheduleWord sw73.hi sw73.lo sw68.hi sw68.lo sw60.hi sw60.lo sw59.hi sw59.lo
+            scheduleWord sw73 sw68 sw60 sw59
 
         sw76 =
-            scheduleWord sw74.hi sw74.lo sw69.hi sw69.lo sw61.hi sw61.lo sw60.hi sw60.lo
+            scheduleWord sw74 sw69 sw61 sw60
 
         sw77 =
-            scheduleWord sw75.hi sw75.lo sw70.hi sw70.lo sw62.hi sw62.lo sw61.hi sw61.lo
+            scheduleWord sw75 sw70 sw62 sw61
 
         sw78 =
-            scheduleWord sw76.hi sw76.lo sw71.hi sw71.lo sw63.hi sw63.lo sw62.hi sw62.lo
+            scheduleWord sw76 sw71 sw63 sw62
 
         sw79 =
-            scheduleWord sw77.hi sw77.lo sw72.hi sw72.lo sw64.hi sw64.lo sw63.hi sw63.lo
+            scheduleWord sw77 sw72 sw64 sw63
 
         -- Initial round state
         s0 =
@@ -698,124 +648,124 @@ compress state q1 q2 q3 q4 =
 
         -- 40 calls to twoRounds (80 rounds total)
         s1 =
-            twoRounds 0x428A2F98 0xD728AE22 w0h w0l 0x71374491 0x23EF65CD w1h w1l s0
+            twoRounds 0x428A2F98 0xD728AE22 w0 0x71374491 0x23EF65CD w1 s0
 
         s2 =
-            twoRounds 0xB5C0FBCF 0xEC4D3B2F w2h w2l 0xE9B5DBA5 0x8189DBBC w3h w3l s1
+            twoRounds 0xB5C0FBCF 0xEC4D3B2F w2 0xE9B5DBA5 0x8189DBBC w3 s1
 
         s3 =
-            twoRounds 0x3956C25B 0xF348B538 w4h w4l 0x59F111F1 0xB605D019 w5h w5l s2
+            twoRounds 0x3956C25B 0xF348B538 w4 0x59F111F1 0xB605D019 w5 s2
 
         s4 =
-            twoRounds 0x923F82A4 0xAF194F9B w6h w6l 0xAB1C5ED5 0xDA6D8118 w7h w7l s3
+            twoRounds 0x923F82A4 0xAF194F9B w6 0xAB1C5ED5 0xDA6D8118 w7 s3
 
         s5 =
-            twoRounds 0xD807AA98 0xA3030242 w8h w8l 0x12835B01 0x45706FBE w9h w9l s4
+            twoRounds 0xD807AA98 0xA3030242 w8 0x12835B01 0x45706FBE w9 s4
 
         s6 =
-            twoRounds 0x243185BE 0x4EE4B28C w10h w10l 0x550C7DC3 0xD5FFB4E2 w11h w11l s5
+            twoRounds 0x243185BE 0x4EE4B28C w10 0x550C7DC3 0xD5FFB4E2 w11 s5
 
         s7 =
-            twoRounds 0x72BE5D74 0xF27B896F w12h w12l 0x80DEB1FE 0x3B1696B1 w13h w13l s6
+            twoRounds 0x72BE5D74 0xF27B896F w12 0x80DEB1FE 0x3B1696B1 w13 s6
 
         s8 =
-            twoRounds 0x9BDC06A7 0x25C71235 w14h w14l 0xC19BF174 0xCF692694 w15h w15l s7
+            twoRounds 0x9BDC06A7 0x25C71235 w14 0xC19BF174 0xCF692694 w15 s7
 
         s9 =
-            twoRounds 0xE49B69C1 0x9EF14AD2 sw16.hi sw16.lo 0xEFBE4786 0x384F25E3 sw17.hi sw17.lo s8
+            twoRounds 0xE49B69C1 0x9EF14AD2 sw16 0xEFBE4786 0x384F25E3 sw17 s8
 
         s10 =
-            twoRounds 0x0FC19DC6 0x8B8CD5B5 sw18.hi sw18.lo 0x240CA1CC 0x77AC9C65 sw19.hi sw19.lo s9
+            twoRounds 0x0FC19DC6 0x8B8CD5B5 sw18 0x240CA1CC 0x77AC9C65 sw19 s9
 
         s11 =
-            twoRounds 0x2DE92C6F 0x592B0275 sw20.hi sw20.lo 0x4A7484AA 0x6EA6E483 sw21.hi sw21.lo s10
+            twoRounds 0x2DE92C6F 0x592B0275 sw20 0x4A7484AA 0x6EA6E483 sw21 s10
 
         s12 =
-            twoRounds 0x5CB0A9DC 0xBD41FBD4 sw22.hi sw22.lo 0x76F988DA 0x831153B5 sw23.hi sw23.lo s11
+            twoRounds 0x5CB0A9DC 0xBD41FBD4 sw22 0x76F988DA 0x831153B5 sw23 s11
 
         s13 =
-            twoRounds 0x983E5152 0xEE66DFAB sw24.hi sw24.lo 0xA831C66D 0x2DB43210 sw25.hi sw25.lo s12
+            twoRounds 0x983E5152 0xEE66DFAB sw24 0xA831C66D 0x2DB43210 sw25 s12
 
         s14 =
-            twoRounds 0xB00327C8 0x98FB213F sw26.hi sw26.lo 0xBF597FC7 0xBEEF0EE4 sw27.hi sw27.lo s13
+            twoRounds 0xB00327C8 0x98FB213F sw26 0xBF597FC7 0xBEEF0EE4 sw27 s13
 
         s15 =
-            twoRounds 0xC6E00BF3 0x3DA88FC2 sw28.hi sw28.lo 0xD5A79147 0x930AA725 sw29.hi sw29.lo s14
+            twoRounds 0xC6E00BF3 0x3DA88FC2 sw28 0xD5A79147 0x930AA725 sw29 s14
 
         s16 =
-            twoRounds 0x06CA6351 0xE003826F sw30.hi sw30.lo 0x14292967 0x0A0E6E70 sw31.hi sw31.lo s15
+            twoRounds 0x06CA6351 0xE003826F sw30 0x14292967 0x0A0E6E70 sw31 s15
 
         s17 =
-            twoRounds 0x27B70A85 0x46D22FFC sw32.hi sw32.lo 0x2E1B2138 0x5C26C926 sw33.hi sw33.lo s16
+            twoRounds 0x27B70A85 0x46D22FFC sw32 0x2E1B2138 0x5C26C926 sw33 s16
 
         s18 =
-            twoRounds 0x4D2C6DFC 0x5AC42AED sw34.hi sw34.lo 0x53380D13 0x9D95B3DF sw35.hi sw35.lo s17
+            twoRounds 0x4D2C6DFC 0x5AC42AED sw34 0x53380D13 0x9D95B3DF sw35 s17
 
         s19 =
-            twoRounds 0x650A7354 0x8BAF63DE sw36.hi sw36.lo 0x766A0ABB 0x3C77B2A8 sw37.hi sw37.lo s18
+            twoRounds 0x650A7354 0x8BAF63DE sw36 0x766A0ABB 0x3C77B2A8 sw37 s18
 
         s20 =
-            twoRounds 0x81C2C92E 0x47EDAEE6 sw38.hi sw38.lo 0x92722C85 0x1482353B sw39.hi sw39.lo s19
+            twoRounds 0x81C2C92E 0x47EDAEE6 sw38 0x92722C85 0x1482353B sw39 s19
 
         s21 =
-            twoRounds 0xA2BFE8A1 0x4CF10364 sw40.hi sw40.lo 0xA81A664B 0xBC423001 sw41.hi sw41.lo s20
+            twoRounds 0xA2BFE8A1 0x4CF10364 sw40 0xA81A664B 0xBC423001 sw41 s20
 
         s22 =
-            twoRounds 0xC24B8B70 0xD0F89791 sw42.hi sw42.lo 0xC76C51A3 0x0654BE30 sw43.hi sw43.lo s21
+            twoRounds 0xC24B8B70 0xD0F89791 sw42 0xC76C51A3 0x0654BE30 sw43 s21
 
         s23 =
-            twoRounds 0xD192E819 0xD6EF5218 sw44.hi sw44.lo 0xD6990624 0x5565A910 sw45.hi sw45.lo s22
+            twoRounds 0xD192E819 0xD6EF5218 sw44 0xD6990624 0x5565A910 sw45 s22
 
         s24 =
-            twoRounds 0xF40E3585 0x5771202A sw46.hi sw46.lo 0x106AA070 0x32BBD1B8 sw47.hi sw47.lo s23
+            twoRounds 0xF40E3585 0x5771202A sw46 0x106AA070 0x32BBD1B8 sw47 s23
 
         s25 =
-            twoRounds 0x19A4C116 0xB8D2D0C8 sw48.hi sw48.lo 0x1E376C08 0x5141AB53 sw49.hi sw49.lo s24
+            twoRounds 0x19A4C116 0xB8D2D0C8 sw48 0x1E376C08 0x5141AB53 sw49 s24
 
         s26 =
-            twoRounds 0x2748774C 0xDF8EEB99 sw50.hi sw50.lo 0x34B0BCB5 0xE19B48A8 sw51.hi sw51.lo s25
+            twoRounds 0x2748774C 0xDF8EEB99 sw50 0x34B0BCB5 0xE19B48A8 sw51 s25
 
         s27 =
-            twoRounds 0x391C0CB3 0xC5C95A63 sw52.hi sw52.lo 0x4ED8AA4A 0xE3418ACB sw53.hi sw53.lo s26
+            twoRounds 0x391C0CB3 0xC5C95A63 sw52 0x4ED8AA4A 0xE3418ACB sw53 s26
 
         s28 =
-            twoRounds 0x5B9CCA4F 0x7763E373 sw54.hi sw54.lo 0x682E6FF3 0xD6B2B8A3 sw55.hi sw55.lo s27
+            twoRounds 0x5B9CCA4F 0x7763E373 sw54 0x682E6FF3 0xD6B2B8A3 sw55 s27
 
         s29 =
-            twoRounds 0x748F82EE 0x5DEFB2FC sw56.hi sw56.lo 0x78A5636F 0x43172F60 sw57.hi sw57.lo s28
+            twoRounds 0x748F82EE 0x5DEFB2FC sw56 0x78A5636F 0x43172F60 sw57 s28
 
         s30 =
-            twoRounds 0x84C87814 0xA1F0AB72 sw58.hi sw58.lo 0x8CC70208 0x1A6439EC sw59.hi sw59.lo s29
+            twoRounds 0x84C87814 0xA1F0AB72 sw58 0x8CC70208 0x1A6439EC sw59 s29
 
         s31 =
-            twoRounds 0x90BEFFFA 0x23631E28 sw60.hi sw60.lo 0xA4506CEB 0xDE82BDE9 sw61.hi sw61.lo s30
+            twoRounds 0x90BEFFFA 0x23631E28 sw60 0xA4506CEB 0xDE82BDE9 sw61 s30
 
         s32 =
-            twoRounds 0xBEF9A3F7 0xB2C67915 sw62.hi sw62.lo 0xC67178F2 0xE372532B sw63.hi sw63.lo s31
+            twoRounds 0xBEF9A3F7 0xB2C67915 sw62 0xC67178F2 0xE372532B sw63 s31
 
         s33 =
-            twoRounds 0xCA273ECE 0xEA26619C sw64.hi sw64.lo 0xD186B8C7 0x21C0C207 sw65.hi sw65.lo s32
+            twoRounds 0xCA273ECE 0xEA26619C sw64 0xD186B8C7 0x21C0C207 sw65 s32
 
         s34 =
-            twoRounds 0xEADA7DD6 0xCDE0EB1E sw66.hi sw66.lo 0xF57D4F7F 0xEE6ED178 sw67.hi sw67.lo s33
+            twoRounds 0xEADA7DD6 0xCDE0EB1E sw66 0xF57D4F7F 0xEE6ED178 sw67 s33
 
         s35 =
-            twoRounds 0x06F067AA 0x72176FBA sw68.hi sw68.lo 0x0A637DC5 0xA2C898A6 sw69.hi sw69.lo s34
+            twoRounds 0x06F067AA 0x72176FBA sw68 0x0A637DC5 0xA2C898A6 sw69 s34
 
         s36 =
-            twoRounds 0x113F9804 0xBEF90DAE sw70.hi sw70.lo 0x1B710B35 0x131C471B sw71.hi sw71.lo s35
+            twoRounds 0x113F9804 0xBEF90DAE sw70 0x1B710B35 0x131C471B sw71 s35
 
         s37 =
-            twoRounds 0x28DB77F5 0x23047D84 sw72.hi sw72.lo 0x32CAAB7B 0x40C72493 sw73.hi sw73.lo s36
+            twoRounds 0x28DB77F5 0x23047D84 sw72 0x32CAAB7B 0x40C72493 sw73 s36
 
         s38 =
-            twoRounds 0x3C9EBE0A 0x15C9BEBC sw74.hi sw74.lo 0x431D67C4 0x9C100D4C sw75.hi sw75.lo s37
+            twoRounds 0x3C9EBE0A 0x15C9BEBC sw74 0x431D67C4 0x9C100D4C sw75 s37
 
         s39 =
-            twoRounds 0x4CC5D4BE 0xCB3E42B6 sw76.hi sw76.lo 0x597F299C 0xFC657E2A sw77.hi sw77.lo s38
+            twoRounds 0x4CC5D4BE 0xCB3E42B6 sw76 0x597F299C 0xFC657E2A sw77 s38
 
         s40 =
-            twoRounds 0x5FCB6FAB 0x3AD6FAEC sw78.hi sw78.lo 0x6C44198C 0x4A475817 sw79.hi sw79.lo s39
+            twoRounds 0x5FCB6FAB 0x3AD6FAEC sw78 0x6C44198C 0x4A475817 sw79 s39
 
         -- Final hash additions (64-bit add with carry)
         ls0 =

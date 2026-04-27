@@ -4,6 +4,8 @@ module Bench exposing
     , v3_64, v3_65, v3_256, v3_1024, v3_4096
     , v4_64, v4_65, v4_256, v4_1024, v4_4096
     , v5_64, v5_65, v5_256, v5_1024, v5_4096
+    , sha512v1_128, sha512v1_256, sha512v1_1024, sha512v1_4096
+    , sha512_128, sha512_256, sha512_1024, sha512_4096
     )
 
 {-| Benchmark functions for SHA-256.
@@ -52,6 +54,8 @@ import SHA256.V1
 import SHA256.V3
 import SHA256.V4
 import SHA256.V5
+import SHA512
+import SHA512.V1
 
 
 makeBytes : Int -> Bytes
@@ -280,3 +284,72 @@ v5_1024 () =
 v5_4096 : () -> Bytes
 v5_4096 () =
     SHA256.V5.hash bytes4096
+
+
+
+-- SHA-512 V1 (baseline)
+
+
+bytes128 : Bytes
+bytes128 =
+    makeBytes 128
+
+
+{-| SHA-512 V1 on 128 bytes.
+-}
+sha512v1_128 : () -> Bytes
+sha512v1_128 () =
+    SHA512.V1.hash bytes128
+
+
+{-| SHA-512 V1 on 256 bytes.
+-}
+sha512v1_256 : () -> Bytes
+sha512v1_256 () =
+    SHA512.V1.hash bytes256
+
+
+{-| SHA-512 V1 on 1024 bytes.
+-}
+sha512v1_1024 : () -> Bytes
+sha512v1_1024 () =
+    SHA512.V1.hash bytes1024
+
+
+{-| SHA-512 V1 on 4096 bytes.
+-}
+sha512v1_4096 : () -> Bytes
+sha512v1_4096 () =
+    SHA512.V1.hash bytes4096
+
+
+
+-- SHA-512 (optimized)
+
+
+{-| SHA-512 optimized on 128 bytes.
+-}
+sha512_128 : () -> Bytes
+sha512_128 () =
+    SHA512.fromBytes bytes128 |> SHA512.toBytes
+
+
+{-| SHA-512 optimized on 256 bytes.
+-}
+sha512_256 : () -> Bytes
+sha512_256 () =
+    SHA512.fromBytes bytes256 |> SHA512.toBytes
+
+
+{-| SHA-512 optimized on 1024 bytes.
+-}
+sha512_1024 : () -> Bytes
+sha512_1024 () =
+    SHA512.fromBytes bytes1024 |> SHA512.toBytes
+
+
+{-| SHA-512 optimized on 4096 bytes.
+-}
+sha512_4096 : () -> Bytes
+sha512_4096 () =
+    SHA512.fromBytes bytes4096 |> SHA512.toBytes

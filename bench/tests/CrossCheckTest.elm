@@ -10,26 +10,32 @@ import SHA256.V1
 import SHA256.V3
 import SHA256.V4
 import SHA256.V5
+import SHA512
+import SHA512.V1
 import Test exposing (..)
 
 
 spec : Test
 spec =
-    describe "V1 vs V2 vs V3 cross-check"
-        [ describe "V1 vs V2"
-            (List.map (crossCheck "V2" (\input -> SHA256.fromBytes input |> SHA256.toBytes))
+    describe "Cross-check"
+        [ describe "SHA-256 V1 vs V2"
+            (List.map (crossCheck256 "V2" (\input -> SHA256.fromBytes input |> SHA256.toBytes))
                 sizes
             )
-        , describe "V1 vs V3"
-            (List.map (crossCheck "V3" SHA256.V3.hash)
+        , describe "SHA-256 V1 vs V3"
+            (List.map (crossCheck256 "V3" SHA256.V3.hash)
                 sizes
             )
-        , describe "V1 vs V4"
-            (List.map (crossCheck "V4" SHA256.V4.hash)
+        , describe "SHA-256 V1 vs V4"
+            (List.map (crossCheck256 "V4" SHA256.V4.hash)
                 sizes
             )
-        , describe "V1 vs V5"
-            (List.map (crossCheck "V5" SHA256.V5.hash)
+        , describe "SHA-256 V1 vs V5"
+            (List.map (crossCheck256 "V5" SHA256.V5.hash)
+                sizes
+            )
+        , describe "SHA-512 V1 vs optimized"
+            (List.map (crossCheck512 "opt" (\input -> SHA512.fromBytes input |> SHA512.toBytes))
                 sizes
             )
         ]
@@ -40,8 +46,8 @@ sizes =
     [ 0, 1, 3, 55, 56, 64, 65, 100, 128, 256, 512, 1024, 4096 ]
 
 
-crossCheck : String -> (Bytes -> Bytes) -> Int -> Test
-crossCheck label hashFn n =
+crossCheck256 : String -> (Bytes -> Bytes) -> Int -> Test
+crossCheck256 label hashFn n =
     test (label ++ " " ++ String.fromInt n ++ " bytes") <|
         \_ ->
             let
@@ -50,6 +56,24 @@ crossCheck label hashFn n =
 
                 v1 =
                     SHA256.V1.hash input
+
+                result =
+                    hashFn input
+            in
+            bytesToHex result
+                |> Expect.equal (bytesToHex v1)
+
+
+crossCheck512 : String -> (Bytes -> Bytes) -> Int -> Test
+crossCheck512 label hashFn n =
+    test (label ++ " " ++ String.fromInt n ++ " bytes") <|
+        \_ ->
+            let
+                input =
+                    makeBytes n
+
+                v1 =
+                    SHA512.V1.hash input
 
                 result =
                     hashFn input

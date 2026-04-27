@@ -5,7 +5,8 @@
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": [
-        "SHA256"
+        "SHA256",
+        "SHA512"
     ],
     "elm-version": "0.19.1 <= v < 0.20.0",
     "dependencies": {

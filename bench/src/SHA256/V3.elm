@@ -1,6 +1,4 @@
-module SHA256.V3 exposing
-    ( hash
-    )
+module SHA256.V3 exposing (hash)
 
 {-| SHA-256 V4: ch/maj inlined + most unsigned calls removed.
 
@@ -166,6 +164,7 @@ u32 =
 
 All w values, schedule words, and round state are flat Int let-bindings to minimize
 allocations. Round constants (k) are inlined as literals.
+
 -}
 compress : BlockState -> HalfBlock -> HalfBlock -> { h0 : Int, h1 : Int, h2 : Int, h3 : Int, h4 : Int, h5 : Int, h6 : Int, h7 : Int }
 compress state first second =
@@ -1277,14 +1276,9 @@ ssig1 x =
         (Bitwise.shiftRightZfBy 10 x)
 
 
-
-
-
-
 unsigned : Int -> Int
 unsigned x =
     Bitwise.shiftRightZfBy 0 x
-
 
 
 {-| Compute SHA-256 hash of bytes.

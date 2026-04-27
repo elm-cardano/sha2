@@ -1,6 +1,4 @@
-module SHA256.V5 exposing
-    ( hash
-    )
+module SHA256.V5 exposing (hash)
 
 {-| SHA-256 V5: V4 with rounds factored into a twoRounds function (F5).
 

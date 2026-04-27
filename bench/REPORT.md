@@ -93,6 +93,40 @@ halfBlockDecoder =
         u32 u32 u32
 ```
 
+### 5. Factor rounds into `twoRounds` function (F5) -- 9% faster
+
+Replaced 64 fully-unrolled rounds (256 let-bindings) with a `twoRounds` function
+called 32 times. The function takes two `(k, w)` pairs and a `RoundState` record,
+executing two rounds per call.
+
+```elm
+type alias RoundState =
+    { a : Int, b : Int, c : Int, d : Int, e : Int, f : Int, g : Int, h : Int }
+
+twoRounds : Int -> Int -> Int -> Int -> RoundState -> RoundState
+twoRounds k0 w0 k1 w1 s =
+    let
+        t1a = s.h + bsig1 s.e + Bitwise.xor s.g (Bitwise.and s.e (Bitwise.xor s.f s.g)) + k0 + w0
+        t2a = bsig0 s.a + Bitwise.xor (Bitwise.xor (Bitwise.and s.a s.b) (Bitwise.and s.a s.c)) (Bitwise.and s.b s.c)
+        a1 = t1a + t2a
+        e1 = s.d + t1a
+        t1b = s.g + bsig1 e1 + Bitwise.xor s.f (Bitwise.and e1 (Bitwise.xor s.e s.f)) + k1 + w1
+        t2b = bsig0 a1 + Bitwise.xor (Bitwise.xor (Bitwise.and a1 s.a) (Bitwise.and a1 s.b)) (Bitwise.and s.a s.b)
+        a2 = t1b + t2b
+        e2 = s.c + t1b
+    in
+    { a = a2, b = a1, c = s.a, d = s.b, e = e2, f = e1, g = s.e, h = s.f }
+
+-- compress calls twoRounds 32 times with inlined round constants
+s1 = twoRounds 0x428A2F98 w0 0x71374491 w1 s0
+s2 = twoRounds 0xB5C0FBCF w2 0xE9B5DBA5 w3 s1
+...
+```
+
+This is F5 (within Elm's fast-call path) and the smaller function body JITs better
+than V4's giant let-block. Despite 32 record allocations per block, the net effect
+is a **9% speedup** and a **55% reduction in source code** (591 lines vs 1310).
+
 ## Failed experiment
 
 ### Eliminate `t2` intermediate variables -- 3% slower (reverted)
@@ -104,8 +138,8 @@ engine to optimize. The simpler two-step computation was faster.
 ## Result
 
 ```
-  Bench.v1_256   ████████████████████   24262 ns/run   baseline
-  Bench.v4_256   ███████████            12812 ns/run   47% faster
+  Bench.v1_256   ████████████████████   24272 ns/run   baseline
+  Bench.v5_256   ██████████             11687 ns/run   52% faster
 ```
 
-**V4 is almost 2x faster than the original folkertdev implementation.**
+**V5 is more than 2x faster than the original folkertdev implementation.**

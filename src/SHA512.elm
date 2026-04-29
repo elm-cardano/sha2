@@ -32,7 +32,7 @@ module SHA512 exposing
 import Bytes exposing (Bytes, Endianness(..))
 import Bytes.Encode as Encode
 import Hex
-import Internal.Base64
+import Base64
 import Internal.Helper exposing (wordToBytes)
 import Internal.SHA512
 
@@ -154,7 +154,7 @@ toHex (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l h6h h6l h7h h7l) =
 -}
 toBase64 : Digest -> String
 toBase64 digest =
-    Internal.Base64.encode (toBytes digest)
+    Base64.fromBytes (toBytes digest)
 
 
 {-| Turn a digest into `Bytes`. The width is 64 bytes or 512 bits.

@@ -34,7 +34,7 @@ It is a truncated variant of SHA-512 with different initial hash values.
 import Bytes exposing (Bytes, Endianness(..))
 import Bytes.Encode as Encode
 import Hex
-import Internal.Base64
+import Base64
 import Internal.Helper exposing (wordToBytes)
 import Internal.SHA512
 
@@ -152,7 +152,7 @@ toHex (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l) =
 -}
 toBase64 : Digest -> String
 toBase64 digest =
-    Internal.Base64.encode (toBytes digest)
+    Base64.fromBytes (toBytes digest)
 
 
 {-| Turn a digest into `Bytes`. The width is 48 bytes or 384 bits.

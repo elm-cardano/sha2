@@ -1,11 +1,11 @@
 module TestSha512 exposing (spec)
 
-import Bytes exposing (Bytes, Endianness(..))
+import Bytes exposing (Endianness(..))
 import Bytes.Encode as Encode
 import Expect
 import Hex
 import SHA512
-import Test exposing (..)
+import Test exposing (Test, describe, test)
 
 
 longMessage : String

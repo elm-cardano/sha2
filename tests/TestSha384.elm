@@ -1,11 +1,10 @@
 module TestSha384 exposing (spec)
 
-import Bytes exposing (Bytes, Endianness(..))
 import Bytes.Encode as Encode
 import Expect
 import Hex
 import SHA384
-import Test exposing (..)
+import Test exposing (Test, describe, test)
 
 
 longMessage : String

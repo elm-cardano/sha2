@@ -29,10 +29,10 @@ module SHA512 exposing
 
 -}
 
+import Base64
 import Bytes exposing (Bytes, Endianness(..))
 import Bytes.Encode as Encode
 import Hex
-import Base64
 import Internal.Helper exposing (wordToBytes)
 import Internal.SHA512
 

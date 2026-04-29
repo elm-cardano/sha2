@@ -1,12 +1,13 @@
-# SHA-256 Optimization Report
+# SHA-2 Optimization Report
 
 ## Baseline
 
-**V1** is the original `folkertdev/elm-sha2` implementation. It uses `Array.get` for
-round constants, recursive helpers, and a `DeltaState` wrapper type.
+**folkertdev** is the original `folkertdev/elm-sha2` implementation. It uses
+`Array.get` for round constants, recursive helpers, and a `DeltaState` wrapper
+type.
 
-**V2** (`elm-cardano/sha2`) is the rewritten implementation, already ~30% faster
-than V1 thanks to:
+**ours** (`elm-cardano/sha2`) is the rewritten implementation. The starting
+point was already ~30% faster than folkertdev thanks to:
 
 - Fully unrolled 64 rounds (no loops or recursion)
 - Round constants inlined as integer literals (no `Array.get`)
@@ -14,7 +15,9 @@ than V1 thanks to:
 - `HalfBlock` record decoder using `map5` + `map2 Tuple.pair` (F5/F8 fast path)
 - Optimized `ch` formula: `z ^ (e & (f ^ g))` (3 ops instead of 4)
 
-## Optimizations applied (V3/V4)
+The optimizations below were then applied on top.
+
+## Optimizations applied
 
 ### 1. Inline `ch` as raw bitwise expressions -- 13% faster
 
@@ -137,9 +140,12 @@ engine to optimize. The simpler two-step computation was faster.
 
 ## Result
 
-```
-  Bench.v1_256   ████████████████████   24272 ns/run   baseline
-  Bench.v5_256   ██████████             11687 ns/run   52% faster
-```
+| Hash    | Input size | ours (ns/run) | folkertdev (ns/run) | folkertdev slower by |
+| ------- | ---------: | ------------: | ------------------: | -------------------: |
+| SHA-256 |   64 bytes |         5,161 |              11,066 |                 114% |
+| SHA-256 | 4096 bytes |       140,684 |             302,060 |                 115% |
+| SHA-512 |  128 bytes |        13,417 |              54,068 |                 303% |
+| SHA-512 | 4096 bytes |       199,476 |             888,757 |                 346% |
 
-**V5 is more than 2x faster than the original folkertdev implementation.**
+**SHA-256 is ~2.1x faster and SHA-512 is ~4x faster than the original
+folkertdev implementation.**

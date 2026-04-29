@@ -37,6 +37,17 @@ integer literals and all intermediate state held in flat `Int` let-bindings.
 Block decoding uses `map5`/`map2` shapes that hit V8's fast paths for
 `Decode.map`.
 
+Benchmarked against the reference `folkertdev/elm-sha2` package:
+
+| Hash    | Input size | ours (ns/run) | folkertdev (ns/run) | folkertdev slower by |
+| ------- | ---------: | ------------: | ------------------: | -------------------: |
+| SHA-256 |   64 bytes |         5,161 |              11,066 |                 114% |
+| SHA-256 | 4096 bytes |       140,684 |             302,060 |                 115% |
+| SHA-512 |  128 bytes |        13,417 |              54,068 |                 303% |
+| SHA-512 | 4096 bytes |       199,476 |             888,757 |                 346% |
+
+SHA-256 is ~2.1x faster and SHA-512 is ~4x faster.
+
 See [`bench/`](https://github.com/elm-cardano/sha2/tree/main/bench) for the full benchmarking setup.
 See [`bench/REPORT.md`](https://github.com/elm-cardano/sha2/tree/main/bench/REPORT.md) for the history of attempted optimizations.
 

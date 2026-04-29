@@ -1,50 +1,50 @@
 module Bench exposing
-    ( v1_64, v1_65, v1_256, v1_1024, v1_4096
-    , v2_64, v2_65, v2_256, v2_1024, v2_4096
-    , sha512v1_128, sha512v1_256, sha512v1_1024, sha512v1_4096
-    , sha512_128, sha512_256, sha512_1024, sha512_4096
+    ( ours_64, ours_65, ours_256, ours_1024, ours_4096
+    , folkertdev_64, folkertdev_65, folkertdev_256, folkertdev_1024, folkertdev_4096
+    , sha512_ours_128, sha512_ours_256, sha512_ours_1024, sha512_ours_4096
+    , sha512_folkertdev_128, sha512_folkertdev_256, sha512_folkertdev_1024, sha512_folkertdev_4096
     )
 
 {-| Benchmark functions for SHA-256 and SHA-512.
 
-V1 is the original folkertdev/elm-sha2 implementation (vendored as a baseline).
-V2 is the elm-cardano/sha2 implementation exposed by this package.
+`ours` is the elm-cardano/sha2 implementation exposed by this package.
+`folkertdev` is the original folkertdev/elm-sha2 implementation (vendored as a baseline).
 
 Each function takes `()` and computes the hash on a pre-built input of the given size.
 Useful with elm-bench:
 
 ```sh
-elm-bench -f Bench.v1_64 -f Bench.v2_64 "()"
-elm-bench -f Bench.v1_65 -f Bench.v2_65 "()"
-elm-bench -f Bench.v1_256 -f Bench.v2_256 "()"
-elm-bench -f Bench.v1_1024 -f Bench.v2_1024 "()"
-elm-bench -f Bench.v1_4096 -f Bench.v2_4096 "()"
+elm-bench -f Bench.ours_64 -f Bench.folkertdev_64 "()"
+elm-bench -f Bench.ours_65 -f Bench.folkertdev_65 "()"
+elm-bench -f Bench.ours_256 -f Bench.folkertdev_256 "()"
+elm-bench -f Bench.ours_1024 -f Bench.folkertdev_1024 "()"
+elm-bench -f Bench.ours_4096 -f Bench.folkertdev_4096 "()"
 
-elm-bench -f Bench.sha512v1_128 -f Bench.sha512_128 "()"
-elm-bench -f Bench.sha512v1_256 -f Bench.sha512_256 "()"
-elm-bench -f Bench.sha512v1_1024 -f Bench.sha512_1024 "()"
-elm-bench -f Bench.sha512v1_4096 -f Bench.sha512_4096 "()"
+elm-bench -f Bench.sha512_ours_128 -f Bench.sha512_folkertdev_128 "()"
+elm-bench -f Bench.sha512_ours_256 -f Bench.sha512_folkertdev_256 "()"
+elm-bench -f Bench.sha512_ours_1024 -f Bench.sha512_folkertdev_1024 "()"
+elm-bench -f Bench.sha512_ours_4096 -f Bench.sha512_folkertdev_4096 "()"
 ```
 
 
-## SHA-256 V1 (folkertdev/elm-sha2)
+## SHA-256 ours (elm-cardano/sha2)
 
-@docs v1_64, v1_65, v1_256, v1_1024, v1_4096
-
-
-## SHA-256 V2 (elm-cardano/sha2)
-
-@docs v2_64, v2_65, v2_256, v2_1024, v2_4096
+@docs ours_64, ours_65, ours_256, ours_1024, ours_4096
 
 
-## SHA-512 V1 (folkertdev/elm-sha2)
+## SHA-256 folkertdev (folkertdev/elm-sha2)
 
-@docs sha512v1_128, sha512v1_256, sha512v1_1024, sha512v1_4096
+@docs folkertdev_64, folkertdev_65, folkertdev_256, folkertdev_1024, folkertdev_4096
 
 
-## SHA-512 V2 (elm-cardano/sha2)
+## SHA-512 ours (elm-cardano/sha2)
 
-@docs sha512_128, sha512_256, sha512_1024, sha512_4096
+@docs sha512_ours_128, sha512_ours_256, sha512_ours_1024, sha512_ours_4096
+
+
+## SHA-512 folkertdev (folkertdev/elm-sha2)
+
+@docs sha512_folkertdev_128, sha512_folkertdev_256, sha512_folkertdev_1024, sha512_folkertdev_4096
 
 -}
 
@@ -95,142 +95,142 @@ bytes4096 =
 
 
 
--- SHA-256 V1 (folkertdev/elm-sha2)
+-- SHA-256 ours (elm-cardano/sha2)
 
 
-{-| V1 SHA-256 on 64 bytes.
+{-| ours SHA-256 on 64 bytes.
 -}
-v1_64 : () -> Bytes
-v1_64 () =
-    SHA256.V1.hash bytes64
-
-
-{-| V1 SHA-256 on 65 bytes.
--}
-v1_65 : () -> Bytes
-v1_65 () =
-    SHA256.V1.hash bytes65
-
-
-{-| V1 SHA-256 on 256 bytes.
--}
-v1_256 : () -> Bytes
-v1_256 () =
-    SHA256.V1.hash bytes256
-
-
-{-| V1 SHA-256 on 1024 bytes.
--}
-v1_1024 : () -> Bytes
-v1_1024 () =
-    SHA256.V1.hash bytes1024
-
-
-{-| V1 SHA-256 on 4096 bytes.
--}
-v1_4096 : () -> Bytes
-v1_4096 () =
-    SHA256.V1.hash bytes4096
-
-
-
--- SHA-256 V2 (elm-cardano/sha2)
-
-
-{-| V2 SHA-256 on 64 bytes.
--}
-v2_64 : () -> Bytes
-v2_64 () =
+ours_64 : () -> Bytes
+ours_64 () =
     SHA256.fromBytes bytes64 |> SHA256.toBytes
 
 
-{-| V2 SHA-256 on 65 bytes.
+{-| ours SHA-256 on 65 bytes.
 -}
-v2_65 : () -> Bytes
-v2_65 () =
+ours_65 : () -> Bytes
+ours_65 () =
     SHA256.fromBytes bytes65 |> SHA256.toBytes
 
 
-{-| V2 SHA-256 on 256 bytes.
+{-| ours SHA-256 on 256 bytes.
 -}
-v2_256 : () -> Bytes
-v2_256 () =
+ours_256 : () -> Bytes
+ours_256 () =
     SHA256.fromBytes bytes256 |> SHA256.toBytes
 
 
-{-| V2 SHA-256 on 1024 bytes.
+{-| ours SHA-256 on 1024 bytes.
 -}
-v2_1024 : () -> Bytes
-v2_1024 () =
+ours_1024 : () -> Bytes
+ours_1024 () =
     SHA256.fromBytes bytes1024 |> SHA256.toBytes
 
 
-{-| V2 SHA-256 on 4096 bytes.
+{-| ours SHA-256 on 4096 bytes.
 -}
-v2_4096 : () -> Bytes
-v2_4096 () =
+ours_4096 : () -> Bytes
+ours_4096 () =
     SHA256.fromBytes bytes4096 |> SHA256.toBytes
 
 
 
--- SHA-512 V1 (folkertdev/elm-sha2)
+-- SHA-256 folkertdev (folkertdev/elm-sha2)
 
 
-{-| SHA-512 V1 on 128 bytes.
+{-| folkertdev SHA-256 on 64 bytes.
 -}
-sha512v1_128 : () -> Bytes
-sha512v1_128 () =
-    SHA512.V1.hash bytes128
+folkertdev_64 : () -> Bytes
+folkertdev_64 () =
+    SHA256.V1.hash bytes64
 
 
-{-| SHA-512 V1 on 256 bytes.
+{-| folkertdev SHA-256 on 65 bytes.
 -}
-sha512v1_256 : () -> Bytes
-sha512v1_256 () =
-    SHA512.V1.hash bytes256
+folkertdev_65 : () -> Bytes
+folkertdev_65 () =
+    SHA256.V1.hash bytes65
 
 
-{-| SHA-512 V1 on 1024 bytes.
+{-| folkertdev SHA-256 on 256 bytes.
 -}
-sha512v1_1024 : () -> Bytes
-sha512v1_1024 () =
-    SHA512.V1.hash bytes1024
+folkertdev_256 : () -> Bytes
+folkertdev_256 () =
+    SHA256.V1.hash bytes256
 
 
-{-| SHA-512 V1 on 4096 bytes.
+{-| folkertdev SHA-256 on 1024 bytes.
 -}
-sha512v1_4096 : () -> Bytes
-sha512v1_4096 () =
-    SHA512.V1.hash bytes4096
+folkertdev_1024 : () -> Bytes
+folkertdev_1024 () =
+    SHA256.V1.hash bytes1024
 
 
-
--- SHA-512 V2 (elm-cardano/sha2)
-
-
-{-| SHA-512 V2 on 128 bytes.
+{-| folkertdev SHA-256 on 4096 bytes.
 -}
-sha512_128 : () -> Bytes
-sha512_128 () =
+folkertdev_4096 : () -> Bytes
+folkertdev_4096 () =
+    SHA256.V1.hash bytes4096
+
+
+
+-- SHA-512 ours (elm-cardano/sha2)
+
+
+{-| ours SHA-512 on 128 bytes.
+-}
+sha512_ours_128 : () -> Bytes
+sha512_ours_128 () =
     SHA512.fromBytes bytes128 |> SHA512.toBytes
 
 
-{-| SHA-512 V2 on 256 bytes.
+{-| ours SHA-512 on 256 bytes.
 -}
-sha512_256 : () -> Bytes
-sha512_256 () =
+sha512_ours_256 : () -> Bytes
+sha512_ours_256 () =
     SHA512.fromBytes bytes256 |> SHA512.toBytes
 
 
-{-| SHA-512 V2 on 1024 bytes.
+{-| ours SHA-512 on 1024 bytes.
 -}
-sha512_1024 : () -> Bytes
-sha512_1024 () =
+sha512_ours_1024 : () -> Bytes
+sha512_ours_1024 () =
     SHA512.fromBytes bytes1024 |> SHA512.toBytes
 
 
-{-| SHA-512 V2 on 4096 bytes.
+{-| ours SHA-512 on 4096 bytes.
 -}
-sha512_4096 : () -> Bytes
-sha512_4096 () =
+sha512_ours_4096 : () -> Bytes
+sha512_ours_4096 () =
     SHA512.fromBytes bytes4096 |> SHA512.toBytes
+
+
+
+-- SHA-512 folkertdev (folkertdev/elm-sha2)
+
+
+{-| folkertdev SHA-512 on 128 bytes.
+-}
+sha512_folkertdev_128 : () -> Bytes
+sha512_folkertdev_128 () =
+    SHA512.V1.hash bytes128
+
+
+{-| folkertdev SHA-512 on 256 bytes.
+-}
+sha512_folkertdev_256 : () -> Bytes
+sha512_folkertdev_256 () =
+    SHA512.V1.hash bytes256
+
+
+{-| folkertdev SHA-512 on 1024 bytes.
+-}
+sha512_folkertdev_1024 : () -> Bytes
+sha512_folkertdev_1024 () =
+    SHA512.V1.hash bytes1024
+
+
+{-| folkertdev SHA-512 on 4096 bytes.
+-}
+sha512_folkertdev_4096 : () -> Bytes
+sha512_folkertdev_4096 () =
+    SHA512.V1.hash bytes4096

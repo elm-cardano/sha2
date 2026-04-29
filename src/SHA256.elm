@@ -85,6 +85,7 @@ fromString str =
 fromBytes : Bytes -> Digest
 fromBytes bytes =
     let
+        r : Internal.SHA256.HashResult
         r =
             Internal.SHA256.hash initialState bytes
     in

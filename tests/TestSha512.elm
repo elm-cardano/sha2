@@ -100,9 +100,11 @@ spec =
             , test "toByteValues matches toBytes" <|
                 \_ ->
                     let
+                        digest : SHA512.Digest
                         digest =
                             SHA512.fromString "abc"
 
+                        viaValues : String
                         viaValues =
                             digest
                                 |> SHA512.toByteValues

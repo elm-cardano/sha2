@@ -93,6 +93,7 @@ fromString str =
 fromBytes : Bytes -> Digest
 fromBytes bytes =
     let
+        r : Internal.SHA512.HashResult
         r =
             Internal.SHA512.hash initialState bytes
     in

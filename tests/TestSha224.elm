@@ -61,9 +61,11 @@ spec =
             [ test "abc" <|
                 \_ ->
                     let
+                        viaString : String
                         viaString =
                             SHA224.toHex (SHA224.fromString "abc")
 
+                        viaBytes : String
                         viaBytes =
                             toHex (SHA224.fromBytes (Encode.encode (Encode.string "abc")))
                     in

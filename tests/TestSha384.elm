@@ -56,9 +56,11 @@ spec =
             [ test "long alphabet message" <|
                 \_ ->
                     let
+                        viaString : String
                         viaString =
                             SHA384.toHex (SHA384.fromString longMessage)
 
+                        viaBytes : String
                         viaBytes =
                             toHex (SHA384.fromBytes (Encode.encode (Encode.string longMessage)))
                     in

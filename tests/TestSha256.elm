@@ -123,9 +123,11 @@ spec =
             , test "toByteValues matches toBytes" <|
                 \_ ->
                     let
+                        digest : SHA256.Digest
                         digest =
                             SHA256.fromString "abc"
 
+                        viaValues : String
                         viaValues =
                             digest
                                 |> SHA256.toByteValues

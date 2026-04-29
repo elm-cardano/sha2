@@ -7,12 +7,8 @@ import Bytes.Encode as Encode
 import Expect
 import SHA256
 import SHA256.V1
-import SHA256.V3
-import SHA256.V4
-import SHA256.V5
 import SHA512
 import SHA512.V1
-import SHA512.V3
 import Test exposing (..)
 
 
@@ -23,24 +19,8 @@ spec =
             (List.map (crossCheck256 "V2" (\input -> SHA256.fromBytes input |> SHA256.toBytes))
                 sizes
             )
-        , describe "SHA-256 V1 vs V3"
-            (List.map (crossCheck256 "V3" SHA256.V3.hash)
-                sizes
-            )
-        , describe "SHA-256 V1 vs V4"
-            (List.map (crossCheck256 "V4" SHA256.V4.hash)
-                sizes
-            )
-        , describe "SHA-256 V1 vs V5"
-            (List.map (crossCheck256 "V5" SHA256.V5.hash)
-                sizes
-            )
-        , describe "SHA-512 V1 vs optimized"
-            (List.map (crossCheck512 "opt" (\input -> SHA512.fromBytes input |> SHA512.toBytes))
-                sizes
-            )
-        , describe "SHA-512 V1 vs V3"
-            (List.map (crossCheck512 "V3" SHA512.V3.hash)
+        , describe "SHA-512 V1 vs V2"
+            (List.map (crossCheck512 "V2" (\input -> SHA512.fromBytes input |> SHA512.toBytes))
                 sizes
             )
         ]
@@ -56,12 +36,15 @@ crossCheck256 label hashFn n =
     test (label ++ " " ++ String.fromInt n ++ " bytes") <|
         \_ ->
             let
+                input : Bytes
                 input =
                     makeBytes n
 
+                v1 : Bytes
                 v1 =
                     SHA256.V1.hash input
 
+                result : Bytes
                 result =
                     hashFn input
             in
@@ -74,12 +57,15 @@ crossCheck512 label hashFn n =
     test (label ++ " " ++ String.fromInt n ++ " bytes") <|
         \_ ->
             let
+                input : Bytes
                 input =
                     makeBytes n
 
+                v1 : Bytes
                 v1 =
                     SHA512.V1.hash input
 
+                result : Bytes
                 result =
                     hashFn input
             in

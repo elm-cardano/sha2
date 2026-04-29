@@ -195,15 +195,5 @@ toBytes (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l) =
 -}
 toByteValues : Digest -> List Int
 toByteValues (Digest h0h h0l h1h h1l h2h h2l h3h h3l h4h h4l h5h h5l) =
-    wordToBytes h0h
-        ++ wordToBytes h0l
-        ++ wordToBytes h1h
-        ++ wordToBytes h1l
-        ++ wordToBytes h2h
-        ++ wordToBytes h2l
-        ++ wordToBytes h3h
-        ++ wordToBytes h3l
-        ++ wordToBytes h4h
-        ++ wordToBytes h4l
-        ++ wordToBytes h5h
-        ++ wordToBytes h5l
+    List.concatMap wordToBytes
+        [ h0h, h0l, h1h, h1l, h2h, h2l, h3h, h3l, h4h, h4l, h5h, h5l ]

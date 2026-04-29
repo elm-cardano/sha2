@@ -167,4 +167,4 @@ toBytes (Digest h0 h1 h2 h3 h4 h5 h6 h7) =
 -}
 toByteValues : Digest -> List Int
 toByteValues (Digest h0 h1 h2 h3 h4 h5 h6 h7) =
-    wordToBytes h0 ++ wordToBytes h1 ++ wordToBytes h2 ++ wordToBytes h3 ++ wordToBytes h4 ++ wordToBytes h5 ++ wordToBytes h6 ++ wordToBytes h7
+    List.concatMap wordToBytes [ h0, h1, h2, h3, h4, h5, h6, h7 ]
